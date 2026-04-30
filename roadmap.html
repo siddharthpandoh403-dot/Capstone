@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" data-page="roadmap">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMind AI | Roadmap</title>
+  <meta name="description" content="Create personalized study roadmaps with StudyMind AI.">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="app-main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="page-content">
+        <section class="page-header">
+          <div>
+            <button class="back-link" type="button" data-back-button>← Back</button>
+            <p class="eyebrow">Learning Strategy</p>
+            <h1>Roadmap</h1>
+            <p class="page-description">Plan milestones, break down topics, and keep your learning path structured from start to finish.</p>
+          </div>
+          <div class="header-actions">
+            <button class="secondary-button" id="roadmapResetButton" type="button">♻ Reset Roadmap</button>
+            <button class="gradient-button" id="roadmapRefreshButton" type="button">✨ Refresh View</button>
+          </div>
+        </section>
+
+        <section class="responsive-grid dashboard-layout">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-primary">Roadmap Generator</span>
+                <h2>Build your personalized path</h2>
+              </div>
+            </div>
+            <form id="roadmapForm" class="form-grid">
+              <div class="form-row">
+                <label class="form-label" for="roadmapGoal">Select your goal</label>
+                <select class="form-control" id="roadmapGoal" name="roadmapGoal" required>
+                  <option value="">Choose a learning path</option>
+                  <option value="Web Development">Web Development</option>
+                  <option value="Machine Learning">Machine Learning</option>
+                  <option value="Android Development">Android Development</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="DSA & Competitive Coding">DSA & Competitive Coding</option>
+                  <option value="Cybersecurity">Cybersecurity</option>
+                  <option value="Cloud Computing">Cloud Computing</option>
+                  <option value="UI/UX Design">UI/UX Design</option>
+                  <option value="Python Programming">Python Programming</option>
+                  <option value="Java Programming">Java Programming</option>
+                  <option value="Custom goal">Custom goal</option>
+                </select>
+              </div>
+              <div class="form-row hidden" id="customGoalWrap">
+                <label class="form-label" for="customGoalInput">Custom goal</label>
+                <input class="form-control" id="customGoalInput" name="customGoalInput" type="text" placeholder="Example: Become confident in React and frontend system design">
+              </div>
+              <div class="form-row-inline">
+                <div class="form-row">
+                  <label class="form-label" for="roadmapLevel">Current level</label>
+                  <select class="form-control" id="roadmapLevel" name="roadmapLevel" required>
+                    <option value="Complete Beginner">Complete Beginner</option>
+                    <option value="Some Knowledge">Some Knowledge</option>
+                    <option value="Intermediate">Intermediate</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label class="form-label" for="roadmapMonths">Months available</label>
+                  <input class="form-control" id="roadmapMonths" name="roadmapMonths" type="number" min="1" max="24" value="3" required>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="secondary-button" id="useProfileGoalButton" type="button">Use Profile Goal</button>
+                <button class="gradient-button" type="submit">Generate Roadmap</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-secondary">Progress Tracker</span>
+                <h2>Your roadmap status</h2>
+              </div>
+            </div>
+            <div class="dashboard-control-stack">
+              <div class="info-card">
+                <div class="item-topline">
+                  <h3 id="roadmapMetaTitle">No roadmap generated yet</h3>
+                  <span class="badge badge-accent" id="roadmapMetaLevel">Ready</span>
+                </div>
+                <p id="roadmapMetaSummary">Generate a roadmap to unlock phase-by-phase planning, topic study cards, and completion tracking.</p>
+                <div class="progress-bar">
+                  <span id="roadmapProgressBar"></span>
+                </div>
+                <div class="info-meta">
+                  <span class="info-pill" id="roadmapProgressLabel">0% complete</span>
+                  <span class="info-pill" id="roadmapMonthsLabel">0 months</span>
+                  <span class="info-pill" id="roadmapTopicCountLabel">0 topics</span>
+                </div>
+              </div>
+              <div id="roadmapHighlights" class="stack-list"></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="responsive-grid dashboard-detail-grid">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-success">Timeline</span>
+                <h2>Phase-wise learning path</h2>
+              </div>
+            </div>
+            <div id="roadmapTimeline" class="dashboard-section-body"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" id="bottomNav"></nav>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root"></div>
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+    <p>Loading roadmap tools...</p>
+  </div>
+
+  <script src="./js/storage.js" defer></script>
+  <script src="./js/data.js" defer></script>
+  <script src="./js/ai.js" defer></script>
+  <script src="./js/app.js" defer></script>
+  <script src="./js/roadmap.js" defer></script>
+</body>
+</html>

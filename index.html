@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" data-page="dashboard">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMind AI | Dashboard</title>
+  <meta name="description" content="StudyMind AI is an AI-powered personalized learning dashboard for students.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="app-main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="page-content">
+        <section class="page-header">
+          <div>
+            <p class="eyebrow">AI Learning Workspace</p>
+            <h1>Dashboard</h1>
+            <p class="page-description">Track your momentum, organize your study life, and build a smarter learning routine with StudyMind AI.</p>
+          </div>
+          <div class="header-actions">
+            <button class="secondary-button" id="openApiSettingsButton" type="button">🔐 API Settings</button>
+            <button class="gradient-button" id="openSetupButton" type="button">✨ Update Profile</button>
+          </div>
+        </section>
+
+        <section class="responsive-grid stats-grid" id="dashboardStats"></section>
+
+        <section class="responsive-grid dashboard-layout">
+          <article class="card dashboard-hero">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-primary">Today’s Focus</span>
+                <h2 id="dashboardGreeting">Welcome to StudyMind AI</h2>
+              </div>
+              <button class="secondary-button" id="refreshDashboardButton" type="button">↻ Refresh</button>
+            </div>
+            <p id="dashboardSummary">Set up your student profile to personalize roadmap suggestions, quizzes, study plans, and competition tracking.</p>
+            <div class="progress-bar">
+              <span id="dashboardProgressBar"></span>
+            </div>
+            <div class="hero-meta-row">
+              <div class="hero-meta-block">
+                <span>Overall Progress</span>
+                <strong id="dashboardProgressLabel">0%</strong>
+              </div>
+              <div class="hero-meta-block">
+                <span>Current Milestone</span>
+                <strong id="dashboardHeroMilestone">Set up your roadmap</strong>
+              </div>
+            </div>
+            <div class="hero-footer">
+              <div class="hero-chip">
+                <span>🔥 Streak</span>
+                <strong id="dashboardStreak">0 days</strong>
+              </div>
+              <div class="hero-chip">
+                <span>🏅 Badges</span>
+                <strong id="dashboardBadges">0 earned</strong>
+              </div>
+              <div class="hero-chip">
+                <span>📘 Goal</span>
+                <strong id="dashboardGoal">Not set</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-secondary">Workspace Controls</span>
+                <h2>Keep your workspace sharp</h2>
+              </div>
+            </div>
+            <div class="dashboard-control-stack">
+              <div id="profileSnapshot" class="profile-snapshot"></div>
+              <div class="control-actions">
+                <button class="secondary-button" id="openApiSettingsButtonSecondary" type="button">🔐 API & Settings</button>
+                <button class="danger-button" id="dashboardResetButton" type="button">Reset All Data</button>
+              </div>
+              <div id="dashboardSuggestions" class="stack-list"></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="responsive-grid dashboard-detail-grid">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-accent">Quick Actions</span>
+                <h2>Launch your next step</h2>
+              </div>
+            </div>
+            <div class="responsive-grid quick-actions-grid">
+              <a class="action-card" href="./quiz.html">
+                <span class="action-icon">🧠</span>
+                <h3>Start Quiz</h3>
+                <p>Practice with smart questions and strengthen weaker concepts.</p>
+              </a>
+              <a class="action-card" href="./roadmap.html">
+                <span class="action-icon">🧭</span>
+                <h3>View Roadmap</h3>
+                <p>Check your learning path and next milestones.</p>
+              </a>
+              <a class="action-card" href="./timetable.html">
+                <span class="action-icon">🗓️</span>
+                <h3>Make Timetable</h3>
+                <p>Organize realistic study blocks for today and the week.</p>
+              </a>
+              <a class="action-card" href="./resources.html">
+                <span class="action-icon">📚</span>
+                <h3>Find Resources</h3>
+                <p>Browse curated learning material for your current focus.</p>
+              </a>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-success">Roadmap</span>
+                <h2>Current roadmap milestone</h2>
+              </div>
+            </div>
+            <div id="roadmapMilestone" class="dashboard-section-body"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-primary">Timetable</span>
+                <h2>Today’s timetable slots</h2>
+              </div>
+            </div>
+            <div id="todaysTimetable" class="dashboard-section-body"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-warning">Attention Needed</span>
+                <h2>Weak topics</h2>
+              </div>
+            </div>
+            <div id="weakTopicsPanel" class="dashboard-section-body"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-secondary">Competitions</span>
+                <h2>Upcoming opportunities</h2>
+              </div>
+            </div>
+            <div id="competitionsPreview" class="dashboard-section-body"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-accent">Milestones</span>
+                <h2>Badges preview</h2>
+              </div>
+            </div>
+            <div id="badgesPreview" class="dashboard-section-body"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" id="bottomNav"></nav>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root"></div>
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+    <p>Preparing your workspace...</p>
+  </div>
+
+  <script src="./js/storage.js" defer></script>
+  <script src="./js/data.js" defer></script>
+  <script src="./js/app.js" defer></script>
+</body>
+</html>

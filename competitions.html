@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" data-page="competitions">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMind AI | Competitions</title>
+  <meta name="description" content="Track academic competitions with StudyMind AI.">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="app-main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="page-content">
+        <section class="page-header">
+          <div>
+            <button class="back-link" type="button" data-back-button>← Back</button>
+            <p class="eyebrow">Opportunity Tracker</p>
+            <h1>Competitions</h1>
+            <p class="page-description">Stay ready for hackathons, olympiads, scholarships, and competitive learning opportunities.</p>
+          </div>
+          <div class="header-actions">
+            <button class="secondary-button" id="competitionClearSearch" type="button">Clear Search</button>
+            <button class="gradient-button" id="competitionRefreshButton" type="button">↻ Refresh</button>
+          </div>
+        </section>
+
+        <section class="responsive-grid dashboard-layout">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-warning">Discovery</span>
+                <h2>Search and filter opportunities</h2>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="form-label" for="competitionSearch">Search competitions</label>
+                <input class="form-control" id="competitionSearch" type="text" placeholder="Search by name, provider, category, or best use">
+              </div>
+              <div class="tab-row" id="competitionTabs">
+                <button class="status-chip active" type="button" data-tab="all">All</button>
+                <button class="status-chip" type="button" data-tab="codingCompetitions">Coding</button>
+                <button class="status-chip" type="button" data-tab="certificationExams">Certifications</button>
+                <button class="status-chip" type="button" data-tab="dailyPracticePlatforms">Daily Practice</button>
+                <button class="status-chip" type="button" data-tab="hackathons">Hackathons</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-primary">Opportunity Feed</span>
+                <h2>Professional discovery board</h2>
+              </div>
+            </div>
+            <div class="dashboard-control-stack">
+              <div class="info-card">
+                <div class="item-topline">
+                  <h3 id="competitionSummaryTitle">Explore curated opportunities</h3>
+                  <span class="badge badge-accent" id="competitionSummaryCount">0 results</span>
+                </div>
+                <p id="competitionSummaryText">Use filters to focus on the opportunities that match your current academic and career goals.</p>
+              </div>
+              <div id="competitionHighlights" class="stack-list"></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="responsive-grid dashboard-detail-grid">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-danger">Coding Competitions</span>
+                <h2>Contest practice</h2>
+              </div>
+            </div>
+            <div id="codingCompetitionsList" class="resource-grid"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-secondary">Certification Exams</span>
+                <h2>Verified credentials</h2>
+              </div>
+            </div>
+            <div id="certificationExamsList" class="resource-grid"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-success">Daily Practice Platforms</span>
+                <h2>Consistent reps</h2>
+              </div>
+            </div>
+            <div id="dailyPracticePlatformsList" class="resource-grid"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-warning">Hackathons</span>
+                <h2>Build in public</h2>
+              </div>
+            </div>
+            <div id="hackathonsList" class="resource-grid"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" id="bottomNav"></nav>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root"></div>
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+    <p>Loading competition board...</p>
+  </div>
+
+  <script src="./js/storage.js" defer></script>
+  <script src="./js/data.js" defer></script>
+  <script src="./js/app.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (document.documentElement.dataset.page !== "competitions") {
+        return;
+      }
+
+      const app = window.StudyMindApp;
+      const competitionData = (window.StudyMindData && window.StudyMindData.competitions) || {};
+      const searchInput = document.getElementById("competitionSearch");
+      const tabs = document.getElementById("competitionTabs");
+      const refreshButton = document.getElementById("competitionRefreshButton");
+      const clearSearchButton = document.getElementById("competitionClearSearch");
+      const summaryTitle = document.getElementById("competitionSummaryTitle");
+      const summaryCount = document.getElementById("competitionSummaryCount");
+      const summaryText = document.getElementById("competitionSummaryText");
+      const highlights = document.getElementById("competitionHighlights");
+      const containers = {
+        codingCompetitions: document.getElementById("codingCompetitionsList"),
+        certificationExams: document.getElementById("certificationExamsList"),
+        dailyPracticePlatforms: document.getElementById("dailyPracticePlatformsList"),
+        hackathons: document.getElementById("hackathonsList")
+      };
+
+      let activeTab = "all";
+
+      function render() {
+        const query = searchInput.value.trim().toLowerCase();
+        const sections = Object.keys(containers);
+        let totalResults = 0;
+
+        sections.forEach(function (sectionKey) {
+          const allItems = competitionData[sectionKey] || [];
+          const filteredItems = allItems.filter(function (item) {
+            const haystack = JSON.stringify(item).toLowerCase();
+            const matchesSearch = !query || haystack.includes(query);
+            const matchesTab = activeTab === "all" || activeTab === sectionKey;
+            return matchesSearch && matchesTab;
+          });
+
+          totalResults += filteredItems.length;
+          containers[sectionKey].innerHTML = filteredItems.length
+            ? filteredItems.map(function (item) { return renderCompetitionCard(item); }).join("")
+            : renderEmptyState(sectionKey, query, activeTab);
+        });
+
+        summaryTitle.textContent = activeTab === "all" ? "Explore curated opportunities" : labelForTab(activeTab);
+        summaryCount.textContent = totalResults + " results";
+        summaryText.textContent = query
+          ? "Showing filtered opportunities for \"" + query + "\" across the selected opportunity categories."
+          : "Use search and tabs to narrow down the most relevant contests, certifications, practice tracks, and hackathons.";
+
+        highlights.innerHTML = `
+          <div class="stack-item">
+            <span>🚀</span>
+            <div>
+              <h3>Choose one lane</h3>
+              <p>Pick one opportunity category that matches your current goal so effort turns into visible momentum.</p>
+            </div>
+          </div>
+          <div class="stack-item">
+            <span>📈</span>
+            <div>
+              <h3>Consistency wins</h3>
+              <p>Daily practice platforms keep your skills warm between bigger contests and hackathons.</p>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderCompetitionCard(item) {
+        const metaLine = [item.category, item.level, item.provider, item.organizer, item.frequency, item.domain, item.format, item.difficultyRange]
+          .filter(Boolean)
+          .slice(0, 2)
+          .join(" • ");
+        return `
+          <article class="resource-card opportunity-card">
+            <div class="item-topline">
+              <h3>${escapeHtml(item.name || "Opportunity")}</h3>
+              <span class="badge badge-primary">Opportunity</span>
+            </div>
+            <p>${escapeHtml(metaLine)}</p>
+            <p>${escapeHtml(item.bestFor || "Explore this opportunity to build skill, credibility, or project experience.")}</p>
+            <a class="gradient-button resource-cta" href="${escapeAttribute(item.link || "#")}" target="_blank" rel="noopener noreferrer">Open Opportunity</a>
+          </article>
+        `;
+      }
+
+      function renderEmptyState(sectionKey, query, tab) {
+        const isVisibleSection = tab === "all" || tab === sectionKey;
+        if (!isVisibleSection) {
+          return `<div class="info-card"><h3>Hidden by filter</h3><p>Switch tabs to view this category again.</p></div>`;
+        }
+        return `<div class="info-card"><h3>No matches</h3><p>${escapeHtml(query ? "No opportunities matched your current search." : "No items available in this category right now.")}</p></div>`;
+      }
+
+      function labelForTab(tab) {
+        const map = {
+          all: "Explore curated opportunities",
+          codingCompetitions: "Coding Competitions",
+          certificationExams: "Certification Exams",
+          dailyPracticePlatforms: "Daily Practice Platforms",
+          hackathons: "Hackathons"
+        };
+        return map[tab] || "Opportunities";
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function escapeAttribute(value) {
+        return escapeHtml(value);
+      }
+
+      tabs.addEventListener("click", function (event) {
+        const tabButton = event.target.closest("[data-tab]");
+        if (!tabButton) {
+          return;
+        }
+        activeTab = tabButton.getAttribute("data-tab");
+        Array.from(tabs.querySelectorAll("[data-tab]")).forEach(function (button) {
+          button.classList.toggle("active", button === tabButton);
+        });
+        render();
+      });
+
+      searchInput.addEventListener("input", render);
+
+      if (refreshButton) {
+        refreshButton.addEventListener("click", function () {
+          render();
+          if (app) {
+            app.showToast("Competition feed refreshed", "Your opportunity board has been refreshed.", "success");
+          }
+        });
+      }
+
+      if (clearSearchButton) {
+        clearSearchButton.addEventListener("click", function () {
+          searchInput.value = "";
+          activeTab = "all";
+          Array.from(tabs.querySelectorAll("[data-tab]")).forEach(function (button) {
+            button.classList.toggle("active", button.getAttribute("data-tab") === "all");
+          });
+          render();
+        });
+      }
+
+      render();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-page="timetable">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMind AI | Timetable</title>
+  <meta name="description" content="Organize study sessions with StudyMind AI timetable planning.">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="app-main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="page-content">
+        <section class="page-header">
+          <div>
+            <button class="back-link" type="button" data-back-button>← Back</button>
+            <p class="eyebrow">Study Planning</p>
+            <h1>Timetable</h1>
+            <p class="page-description">Build a sustainable weekly routine with time blocks that match your goals and energy.</p>
+          </div>
+          <div class="header-actions">
+            <button class="secondary-button" id="regenerateTimetableButton" type="button">↻ Regenerate</button>
+            <button class="danger-button" id="clearTimetableButton" type="button">Clear Timetable</button>
+          </div>
+        </section>
+
+        <section class="responsive-grid dashboard-layout">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-accent">Schedule Builder</span>
+                <h2>Create your weekly study plan</h2>
+              </div>
+            </div>
+            <form id="timetableForm" class="form-grid">
+              <div class="form-row">
+                <label class="form-label">Subjects</label>
+                <div id="subjectList" class="dashboard-section-body"></div>
+                <button class="secondary-button" id="addSubjectButton" type="button">＋ Add Subject</button>
+              </div>
+              <div class="form-row-inline">
+                <div class="form-row">
+                  <label class="form-label" for="studyHoursPerDay">Available study hours per day</label>
+                  <input class="form-control" id="studyHoursPerDay" name="studyHoursPerDay" type="number" min="1" max="12" value="3" required>
+                </div>
+                <div class="form-row">
+                  <label class="form-label" for="preferredStudyTime">Preferred study time</label>
+                  <select class="form-control" id="preferredStudyTime" name="preferredStudyTime" required>
+                    <option value="Morning">Morning</option>
+                    <option value="Afternoon">Afternoon</option>
+                    <option value="Evening" selected>Evening</option>
+                    <option value="Night">Night</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <label class="form-label" for="examDate">Exam date <span class="form-help">(optional)</span></label>
+                <input class="form-control" id="examDate" name="examDate" type="date">
+              </div>
+              <div class="form-row">
+                <label class="form-label">Days available</label>
+                <div id="availableDaysGroup" class="checkbox-grid"></div>
+              </div>
+              <div class="modal-footer">
+                <button class="secondary-button" id="saveTimetableButton" type="button">Save Timetable</button>
+                <button class="gradient-button" type="submit">Generate Weekly Timetable</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-primary">Planner Snapshot</span>
+                <h2>Balanced weekly rhythm</h2>
+              </div>
+            </div>
+            <div class="dashboard-control-stack">
+              <div class="info-card">
+                <div class="item-topline">
+                  <h3 id="timetableOverviewTitle">No timetable generated yet</h3>
+                  <span class="badge badge-accent" id="timetableOverviewTime">Ready</span>
+                </div>
+                <p id="timetableOverviewSummary">Generate a timetable to distribute weak subjects, short breaks, and weekend revision across your available days.</p>
+                <div class="progress-bar">
+                  <span id="timetableCoverageBar"></span>
+                </div>
+                <div class="info-meta">
+                  <span class="info-pill" id="timetableSlotsLabel">0 slots</span>
+                  <span class="info-pill" id="timetableDaysLabel">0 days active</span>
+                  <span class="info-pill" id="timetableWeakLabel">0 weak-focus slots</span>
+                </div>
+              </div>
+              <div id="timetableHighlights" class="stack-list"></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="responsive-grid dashboard-detail-grid">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-success">Weekly Calendar</span>
+                <h2>Mon to Sun schedule</h2>
+              </div>
+            </div>
+            <div id="timetableCalendar" class="dashboard-section-body"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" id="bottomNav"></nav>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root"></div>
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+    <p>Loading timetable planner...</p>
+  </div>
+
+  <script src="./js/storage.js" defer></script>
+  <script src="./js/data.js" defer></script>
+  <script src="./js/app.js" defer></script>
+  <script src="./js/timetable.js" defer></script>
+</body>
+</html>

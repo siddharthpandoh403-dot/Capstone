@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-page="quiz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMind AI | Quiz</title>
+  <meta name="description" content="Practice personalized quizzes with StudyMind AI.">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="app-main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="page-content">
+        <section class="page-header">
+          <div>
+            <button class="back-link" type="button" data-back-button>← Back</button>
+            <p class="eyebrow">Practice Engine</p>
+            <h1>Quiz</h1>
+            <p class="page-description">Train recall, discover weak topics, and prepare for exams with focused practice sessions.</p>
+          </div>
+          <div class="header-actions">
+            <button class="secondary-button" id="quizResetButton" type="button">♻ Reset Quiz</button>
+            <button class="gradient-button" id="quizRefreshButton" type="button">✨ Refresh View</button>
+          </div>
+        </section>
+
+        <section class="responsive-grid dashboard-layout">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-secondary">Practice Setup</span>
+                <h2>Create a focused quiz session</h2>
+              </div>
+            </div>
+            <form id="quizForm" class="form-grid">
+              <div class="form-row">
+                <label class="form-label" for="quizSubject">Select subject</label>
+                <select class="form-control" id="quizSubject" name="quizSubject" required>
+                  <option value="">Choose a subject</option>
+                  <option value="Web Development">Web Development</option>
+                  <option value="Python">Python</option>
+                  <option value="Machine Learning">Machine Learning</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="DSA">DSA</option>
+                  <option value="Java">Java</option>
+                  <option value="Cybersecurity">Cybersecurity</option>
+                  <option value="Cloud Computing">Cloud Computing</option>
+                  <option value="Database">Database</option>
+                  <option value="Git">Git</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label" for="quizTopic">Topic</label>
+                <input class="form-control" id="quizTopic" name="quizTopic" type="text" list="quizTopicSuggestions" placeholder="Example: DOM, Recursion, SQL Joins" required>
+                <datalist id="quizTopicSuggestions"></datalist>
+              </div>
+              <div class="form-row-inline">
+                <div class="form-row">
+                  <label class="form-label" for="quizDifficulty">Difficulty</label>
+                  <select class="form-control" id="quizDifficulty" name="quizDifficulty" required>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label class="form-label" for="quizCount">Questions</label>
+                  <select class="form-control" id="quizCount" name="quizCount" required>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="secondary-button" id="quizUseParamsButton" type="button">Use Linked Topic</button>
+                <button class="gradient-button" type="submit">Generate Quiz</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-primary">Session Overview</span>
+                <h2>Stay sharp and focused</h2>
+              </div>
+            </div>
+            <div class="dashboard-control-stack">
+              <div class="info-card">
+                <div class="item-topline">
+                  <h3 id="quizOverviewTitle">No active quiz</h3>
+                  <span class="badge badge-accent" id="quizOverviewDifficulty">Ready</span>
+                </div>
+                <p id="quizOverviewSummary">Generate a quiz to begin timed practice with one question at a time and focused answer review.</p>
+                <div class="progress-bar">
+                  <span id="quizSessionProgressBar"></span>
+                </div>
+                <div class="info-meta">
+                  <span class="info-pill" id="quizSessionProgressLabel">0 / 0 answered</span>
+                  <span class="info-pill" id="quizTimerLabel">30s per question</span>
+                  <span class="info-pill" id="quizHistoryCountLabel">0 past quizzes</span>
+                </div>
+              </div>
+              <div id="quizHighlights" class="stack-list"></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="responsive-grid dashboard-detail-grid">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-success">Question View</span>
+                <h2>One question at a time</h2>
+              </div>
+            </div>
+            <div id="quizWorkspace" class="dashboard-section-body"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" id="bottomNav"></nav>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root"></div>
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+    <p>Loading quiz center...</p>
+  </div>
+
+  <script src="./js/storage.js" defer></script>
+  <script src="./js/data.js" defer></script>
+  <script src="./js/ai.js" defer></script>
+  <script src="./js/app.js" defer></script>
+  <script src="./js/quiz.js" defer></script>
+</body>
+</html>

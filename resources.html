@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" data-page="resources">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMind AI | Resources</title>
+  <meta name="description" content="Access curated learning resources with StudyMind AI.">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="app-main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="page-content">
+        <section class="page-header">
+          <div>
+            <button class="back-link" type="button" data-back-button>← Back</button>
+            <p class="eyebrow">Knowledge Library</p>
+            <h1>Resources</h1>
+            <p class="page-description">Collect high-quality notes, videos, links, and reference material in one clean learning hub.</p>
+          </div>
+          <div class="header-actions">
+            <button class="secondary-button" id="resourceRefreshButton" type="button">↻ Refresh</button>
+            <button class="gradient-button" id="resourceExplorerButton" type="button">✨ Curated Picks</button>
+          </div>
+        </section>
+
+        <section class="responsive-grid dashboard-layout">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-success">Library</span>
+                <h2>Choose your learning track</h2>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="form-label" for="resourceTopic">Select topic or subject</label>
+                <select class="form-control" id="resourceTopic">
+                  <option value="Web Development">Web Development</option>
+                  <option value="Python Programming">Python Programming</option>
+                  <option value="Machine Learning">Machine Learning</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="DSA & Algorithms">DSA & Algorithms</option>
+                  <option value="Android Development">Android Development</option>
+                  <option value="Cybersecurity">Cybersecurity</option>
+                  <option value="Cloud Computing">Cloud Computing</option>
+                  <option value="Java Programming">Java Programming</option>
+                  <option value="UI/UX Design">UI/UX Design</option>
+                  <option value="Database">Database</option>
+                  <option value="Git & GitHub">Git & GitHub</option>
+                </select>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-primary">Explorer</span>
+                <h2>Curated and trackable</h2>
+              </div>
+            </div>
+            <div class="dashboard-control-stack">
+              <div class="info-card">
+                <div class="item-topline">
+                  <h3 id="resourceSummaryTitle">Web Development Resources</h3>
+                  <span class="badge badge-accent" id="resourceVisitBadge">0 visits</span>
+                </div>
+                <p id="resourceSummaryText">Switch subjects to explore trusted channels, websites, and free courses tailored to your current focus.</p>
+                <div class="info-meta">
+                  <span class="info-pill" id="resourceChannelCount">0 channels</span>
+                  <span class="info-pill" id="resourceWebsiteCount">0 websites</span>
+                  <span class="info-pill" id="resourceCourseCount">0 courses</span>
+                </div>
+              </div>
+              <div id="resourceHighlights" class="stack-list"></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="responsive-grid dashboard-detail-grid">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-danger">YouTube Channels</span>
+                <h2>Watch and absorb</h2>
+              </div>
+            </div>
+            <div id="youtubeResources" class="resource-grid"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-secondary">Websites</span>
+                <h2>Read and reference</h2>
+              </div>
+            </div>
+            <div id="websiteResources" class="resource-grid"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-success">Free Courses</span>
+                <h2>Structured learning</h2>
+              </div>
+            </div>
+            <div id="courseResources" class="resource-grid"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" id="bottomNav"></nav>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root"></div>
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+    <p>Loading resources...</p>
+  </div>
+
+  <script src="./js/storage.js" defer></script>
+  <script src="./js/data.js" defer></script>
+  <script src="./js/app.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (document.documentElement.dataset.page !== "resources") {
+        return;
+      }
+
+      const storage = window.StudyMindStorage;
+      const app = window.StudyMindApp;
+      const data = (window.StudyMindData && window.StudyMindData.resources) || {};
+      const badgeDefinitions = (window.StudyMindData && window.StudyMindData.badgeDefinitions) || [];
+      const topicSelect = document.getElementById("resourceTopic");
+      const youtubeResources = document.getElementById("youtubeResources");
+      const websiteResources = document.getElementById("websiteResources");
+      const courseResources = document.getElementById("courseResources");
+      const summaryTitle = document.getElementById("resourceSummaryTitle");
+      const summaryText = document.getElementById("resourceSummaryText");
+      const visitBadge = document.getElementById("resourceVisitBadge");
+      const channelCount = document.getElementById("resourceChannelCount");
+      const websiteCount = document.getElementById("resourceWebsiteCount");
+      const courseCount = document.getElementById("resourceCourseCount");
+      const highlights = document.getElementById("resourceHighlights");
+      const refreshButton = document.getElementById("resourceRefreshButton");
+      const explorerButton = document.getElementById("resourceExplorerButton");
+      const visitKey = "studymind-resource-visits";
+
+      function getVisits() {
+        return storage.getData(visitKey, []);
+      }
+
+      function saveVisit(topic, label, link) {
+        const visits = getVisits();
+        visits.unshift({
+          topic: topic,
+          label: label,
+          link: link,
+          visitedAt: new Date().toISOString()
+        });
+        storage.setData(visitKey, visits.slice(0, 200));
+        updateVisitBadge();
+        awardResourceExplorerBadge();
+      }
+
+      function updateVisitBadge() {
+        visitBadge.textContent = getVisits().length + " visits";
+      }
+
+      function awardResourceExplorerBadge() {
+        const visits = getVisits();
+        if (visits.length < 5) {
+          return;
+        }
+        const badges = storage.getBadges();
+        const exists = badges.some(function (badge) { return badge.id === "resource-explorer"; });
+        if (exists) {
+          return;
+        }
+        const definition = badgeDefinitions.find(function (item) { return item.id === "resource-explorer"; });
+        badges.push({
+          id: "resource-explorer",
+          title: definition ? definition.title : "Resource Explorer",
+          earnedAt: new Date().toISOString()
+        });
+        storage.saveBadges(badges);
+        if (app) {
+          app.showToast("Badge earned", "You unlocked Resource Explorer after exploring multiple resources.", "success");
+        }
+      }
+
+      function renderTopic(topic) {
+        const topicData = data[topic];
+        if (!topicData) {
+          youtubeResources.innerHTML = renderEmptyResourceState("No YouTube recommendations available yet.");
+          websiteResources.innerHTML = renderEmptyResourceState("No websites available yet.");
+          courseResources.innerHTML = renderEmptyResourceState("No free courses available yet.");
+          return;
+        }
+
+        summaryTitle.textContent = topic + " Resources";
+        summaryText.textContent = "Curated picks to help you learn faster without wasting time on scattered tabs and low-signal recommendations.";
+        channelCount.textContent = topicData.youtubeChannels.length + " channels";
+        websiteCount.textContent = topicData.websites.length + " websites";
+        courseCount.textContent = topicData.freeCourses.length + " courses";
+        highlights.innerHTML = `
+          <div class="stack-item">
+            <span>🎯</span>
+            <div>
+              <h3>Best next move</h3>
+              <p>Start with one channel, one reference site, and one structured course so your learning stays balanced.</p>
+            </div>
+          </div>
+          <div class="stack-item">
+            <span>📌</span>
+            <div>
+              <h3>Track your progress</h3>
+              <p>Every resource click is saved locally so StudyMind AI can recognize your exploration habit.</p>
+            </div>
+          </div>
+        `;
+
+        youtubeResources.innerHTML = topicData.youtubeChannels.map(function (item) {
+          return renderResourceCard({
+            title: item.name,
+            subtitle: "Best for: " + item.bestFor,
+            badge: "YouTube",
+            badgeClass: "badge-danger",
+            link: item.link,
+            cta: "Open Channel"
+          });
+        }).join("");
+
+        websiteResources.innerHTML = topicData.websites.map(function (item) {
+          return renderResourceCard({
+            title: item.name,
+            subtitle: item.type,
+            badge: item.badge,
+            badgeClass: item.badge === "Paid" ? "badge-warning" : "badge-success",
+            link: item.link,
+            cta: "Visit Site"
+          });
+        }).join("");
+
+        courseResources.innerHTML = topicData.freeCourses.map(function (item) {
+          return renderResourceCard({
+            title: item.name + " • " + item.platform,
+            subtitle: item.duration + " • " + item.difficulty,
+            badge: "Course",
+            badgeClass: "badge-primary",
+            link: item.link,
+            cta: "Start Course"
+          });
+        }).join("");
+
+        Array.from(document.querySelectorAll("[data-resource-link]")).forEach(function (link) {
+          link.addEventListener("click", function () {
+            saveVisit(topic, link.getAttribute("data-resource-label"), link.href);
+          });
+        });
+      }
+
+      function renderResourceCard(config) {
+        return `
+          <article class="resource-card">
+            <div class="item-topline">
+              <h3>${escapeHtml(config.title)}</h3>
+              <span class="badge ${config.badgeClass}">${escapeHtml(config.badge)}</span>
+            </div>
+            <p>${escapeHtml(config.subtitle)}</p>
+            <a class="gradient-button resource-cta" data-resource-link data-resource-label="${escapeAttribute(config.title)}" href="${escapeAttribute(config.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(config.cta)}</a>
+          </article>
+        `;
+      }
+
+      function renderEmptyResourceState(message) {
+        return `
+          <div class="info-card">
+            <h3>Nothing loaded</h3>
+            <p>${escapeHtml(message)}</p>
+          </div>
+        `;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function escapeAttribute(value) {
+        return escapeHtml(value);
+      }
+
+      topicSelect.addEventListener("change", function () {
+        renderTopic(topicSelect.value);
+      });
+
+      if (refreshButton) {
+        refreshButton.addEventListener("click", function () {
+          renderTopic(topicSelect.value);
+          if (app) {
+            app.showToast("Resources refreshed", "Your curated resource library has been refreshed.", "success");
+          }
+        });
+      }
+
+      if (explorerButton) {
+        explorerButton.addEventListener("click", function () {
+          topicSelect.focus();
+        });
+      }
+
+      updateVisitBadge();
+      renderTopic(topicSelect.value);
+    });
+  </script>
+</body>
+</html>

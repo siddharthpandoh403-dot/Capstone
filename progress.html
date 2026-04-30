@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en" data-page="progress">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMind AI | Progress</title>
+  <meta name="description" content="Monitor your learning progress with StudyMind AI.">
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="app-main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="page-content">
+        <section class="page-header">
+          <div>
+            <button class="back-link" type="button" data-back-button>← Back</button>
+            <p class="eyebrow">Growth Analytics</p>
+            <h1>Progress</h1>
+            <p class="page-description">See your study streak, badge milestones, and learning consistency at a glance.</p>
+          </div>
+          <div class="header-actions">
+            <button class="secondary-button" id="progressRefreshButton" type="button">Refresh</button>
+            <button class="gradient-button" id="progressInsightsButton" type="button">View Insights</button>
+          </div>
+        </section>
+
+        <section class="responsive-grid dashboard-layout">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-primary">Overview</span>
+                <h2>Progress insights</h2>
+              </div>
+            </div>
+            <div class="dashboard-control-stack">
+              <div class="info-card">
+                <div class="item-topline">
+                  <h3>Overall learning progress</h3>
+                  <span class="badge badge-accent" id="progressMotivationBadge">Keep going</span>
+                </div>
+                <p id="progressMotivationText">Your current habits and completed work are starting to form a strong learning rhythm.</p>
+                <div class="progress-bar">
+                  <span id="overallProgressBar"></span>
+                </div>
+                <div class="info-meta">
+                  <span class="info-pill" id="overallProgressLabel">0% overall</span>
+                  <span class="info-pill" id="studyStreakLabel">0 day streak</span>
+                  <span class="info-pill" id="badgeCountLabel">0 badges</span>
+                </div>
+              </div>
+              <div id="progressHighlights" class="stack-list"></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-secondary">Subject Breakdown</span>
+                <h2>Subject-wise progress</h2>
+              </div>
+            </div>
+            <div id="subjectProgressList" class="dashboard-section-body"></div>
+          </article>
+        </section>
+
+        <section class="responsive-grid dashboard-detail-grid">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-success">Charts</span>
+                <h2>Quiz score trend</h2>
+              </div>
+            </div>
+            <div id="quizChartWrap" class="chart-card"><canvas id="quizBarChart"></canvas></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-warning">Charts</span>
+                <h2>Subject effort split</h2>
+              </div>
+            </div>
+            <div id="subjectChartWrap" class="chart-card"><canvas id="subjectPieChart"></canvas></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-danger">Weak Topics</span>
+                <h2>Needs attention</h2>
+              </div>
+            </div>
+            <div id="weakTopicsList" class="dashboard-section-body"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-success">Strong Topics</span>
+                <h2>Where you shine</h2>
+              </div>
+            </div>
+            <div id="strongTopicsList" class="dashboard-section-body"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-primary">Badges</span>
+                <h2>Earned milestones</h2>
+              </div>
+            </div>
+            <div id="earnedBadgesList" class="dashboard-section-body"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="badge badge-secondary">History</span>
+                <h2>Quiz history</h2>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Subject</th>
+                    <th>Topic</th>
+                    <th>Difficulty</th>
+                    <th>Score</th>
+                  </tr>
+                </thead>
+                <tbody id="quizHistoryTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" id="bottomNav"></nav>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root"></div>
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+    <p>Loading progress insights...</p>
+  </div>
+
+  <script src="./js/storage.js" defer></script>
+  <script src="./js/data.js" defer></script>
+  <script src="./js/app.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (document.documentElement.dataset.page !== "progress") {
+        return;
+      }
+
+      const storage = window.StudyMindStorage;
+      const app = window.StudyMindApp;
+      const seedData = window.StudyMindData || {};
+      let quizChartInstance = null;
+      let subjectChartInstance = null;
+
+      const elements = {
+        overallProgressBar: document.getElementById("overallProgressBar"),
+        overallProgressLabel: document.getElementById("overallProgressLabel"),
+        studyStreakLabel: document.getElementById("studyStreakLabel"),
+        badgeCountLabel: document.getElementById("badgeCountLabel"),
+        progressMotivationText: document.getElementById("progressMotivationText"),
+        progressMotivationBadge: document.getElementById("progressMotivationBadge"),
+        progressHighlights: document.getElementById("progressHighlights"),
+        subjectProgressList: document.getElementById("subjectProgressList"),
+        weakTopicsList: document.getElementById("weakTopicsList"),
+        strongTopicsList: document.getElementById("strongTopicsList"),
+        earnedBadgesList: document.getElementById("earnedBadgesList"),
+        quizHistoryTableBody: document.getElementById("quizHistoryTableBody"),
+        quizChartWrap: document.getElementById("quizChartWrap"),
+        subjectChartWrap: document.getElementById("subjectChartWrap")
+      };
+
+      function getRoadmapPhases() {
+        if (app && typeof app.getRoadmapPhases === "function") {
+          return app.getRoadmapPhases(storage.getRoadmap());
+        }
+        if (typeof storage.normalizeRoadmapPhases === "function") {
+          return storage.normalizeRoadmapPhases(storage.getRoadmap());
+        }
+        return Array.isArray(storage.getRoadmap()) ? storage.getRoadmap() : [];
+      }
+
+      function renderProgressPage() {
+        const overallProgress = storage.calculateOverallProgress();
+        const streak = storage.updateStudyStreak();
+        const badges = storage.getBadges();
+        const quizHistory = storage.getQuizHistory();
+        const weakTopics = storage.getWeakTopics();
+        const roadmap = getRoadmapPhases();
+        const timetable = storage.getTimetable();
+        const subjectStats = buildSubjectStats(roadmap, quizHistory, timetable);
+        const strongTopics = buildStrongTopics(quizHistory, roadmap);
+        const motivation = getMotivationalState(overallProgress, streak);
+
+        elements.overallProgressBar.style.width = Math.max(overallProgress, 6) + "%";
+        elements.overallProgressLabel.textContent = overallProgress + "% overall";
+        elements.studyStreakLabel.textContent = streak + (streak === 1 ? " day streak" : " day streak");
+        elements.badgeCountLabel.textContent = badges.length + " badges";
+        elements.progressMotivationText.textContent = motivation.message;
+        elements.progressMotivationBadge.textContent = motivation.badge;
+        elements.progressHighlights.innerHTML = renderHighlights(overallProgress, streak, quizHistory, weakTopics);
+        elements.subjectProgressList.innerHTML = renderSubjectProgress(subjectStats);
+        elements.weakTopicsList.innerHTML = renderWeakTopics(weakTopics);
+        elements.strongTopicsList.innerHTML = renderStrongTopics(strongTopics);
+        elements.earnedBadgesList.innerHTML = renderBadges(badges, seedData.badgeDefinitions || []);
+        elements.quizHistoryTableBody.innerHTML = renderQuizHistoryRows(quizHistory);
+        renderCharts(quizHistory, subjectStats);
+      }
+
+      function buildSubjectStats(roadmap, quizHistory, timetable) {
+        const stats = {};
+
+        (roadmap || []).forEach(function (phase) {
+          const phaseName = phase.title || phase.phase || "Roadmap";
+          (phase.topics || []).forEach(function (topic) {
+            const key = inferSubjectFromTopic(topic.title || phaseName);
+            stats[key] = stats[key] || { completed: 0, total: 0, minutes: 0, quizScores: [] };
+            stats[key].total += 1;
+            if (topic.status === "done" || topic.status === "completed") {
+              stats[key].completed += 1;
+            }
+          });
+        });
+
+        (quizHistory || []).forEach(function (entry) {
+          const key = entry.subject || inferSubjectFromTopic(entry.topic);
+          stats[key] = stats[key] || { completed: 0, total: 0, minutes: 0, quizScores: [] };
+          stats[key].quizScores.push(entry.percentage || Math.round(((entry.score || 0) / Math.max(entry.total || 1, 1)) * 100));
+        });
+
+        (timetable || []).forEach(function (slot) {
+          const key = slot.subject || slot.title;
+          if (!key || key === "Short Break" || key === "Revision") {
+            return;
+          }
+          stats[key] = stats[key] || { completed: 0, total: 0, minutes: 0, quizScores: [] };
+          stats[key].minutes += parseDuration(slot.duration || slot.time || "0");
+        });
+
+        return Object.keys(stats).map(function (subject) {
+          const item = stats[subject];
+          const roadmapPercent = item.total ? Math.round((item.completed / item.total) * 100) : 0;
+          const quizPercent = item.quizScores.length
+            ? Math.round(item.quizScores.reduce(function (sum, value) { return sum + value; }, 0) / item.quizScores.length)
+            : 0;
+          const timePercent = Math.min(100, Math.round((item.minutes || 0) / 6));
+
+          return {
+            subject: subject,
+            roadmapPercent: roadmapPercent,
+            quizPercent: quizPercent,
+            timePercent: timePercent,
+            overall: Math.round((roadmapPercent + quizPercent + timePercent) / 3),
+            minutes: item.minutes || 0
+          };
+        }).sort(function (a, b) {
+          return b.overall - a.overall;
+        });
+      }
+
+      function buildStrongTopics(quizHistory, roadmap) {
+        const strong = [];
+        (quizHistory || []).forEach(function (entry) {
+          const percent = entry.percentage || Math.round(((entry.score || 0) / Math.max(entry.total || 1, 1)) * 100);
+          if (percent >= 80) {
+            strong.push(entry.topic || entry.subject || "Strong topic");
+          }
+        });
+        (roadmap || []).forEach(function (phase) {
+          (phase.topics || []).forEach(function (topic) {
+            if (topic.status === "done" || topic.status === "completed") {
+              strong.push(topic.title);
+            }
+          });
+        });
+        return Array.from(new Set(strong)).slice(0, 6);
+      }
+
+      function getMotivationalState(progress, streak) {
+        const messages = seedData.motivationalMessages || [];
+        if (progress >= 75) {
+          return { badge: "Momentum High", message: messages[1] || "You are in a strong rhythm. Keep reinforcing what already works." };
+        }
+        if (streak >= 7) {
+          return { badge: "Streak Strong", message: "Your consistency is turning into real compounding progress. Protect the streak and keep shipping study sessions." };
+        }
+        if (progress >= 40) {
+          return { badge: "Building Well", message: messages[0] || "You are building momentum. Stay consistent and keep tightening weak spots." };
+        }
+        return { badge: "Start Small", message: messages[2] || "A few focused sessions this week can shift the whole trajectory." };
+      }
+
+      function renderHighlights(progress, streak, quizHistory, weakTopics) {
+        const items = [
+          { icon: "📈", title: "Overall trajectory", text: "You are currently at " + progress + "% blended progress across roadmap, quizzes, timetable, and badges." },
+          { icon: "🔥", title: "Study streak", text: streak ? "Your current streak is " + streak + " day" + (streak === 1 ? "" : "s") + "." : "Start with one focused study day to spark your streak." },
+          { icon: "🧠", title: "Quiz activity", text: quizHistory.length ? "You have completed " + quizHistory.length + " quiz session" + (quizHistory.length === 1 ? "" : "s") + "." : "No quiz history yet. Practice sessions will reveal weak and strong areas." },
+          { icon: "🎯", title: "Revision targets", text: weakTopics.length ? weakTopics.slice(0, 3).join(", ") + (weakTopics.length > 3 ? " and more need revision." : " need revision.") : "No weak topics saved yet. Once you miss questions, they will appear here." }
+        ];
+        return items.map(function (item) {
+          return `<div class="stack-item"><span>${escapeHtml(item.icon)}</span><div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.text)}</p></div></div>`;
+        }).join("");
+      }
+
+      function renderSubjectProgress(subjectStats) {
+        if (!subjectStats.length) {
+          return renderInfoFallback("No subject progress yet", "Generate a roadmap, timetable, or quiz activity to unlock subject-level progress tracking.");
+        }
+        return subjectStats.map(function (item) {
+          return `<div class="info-card"><div class="item-topline"><h3>${escapeHtml(item.subject)}</h3><span class="badge badge-primary">${item.overall}%</span></div><div class="subject-progress-stack">${renderProgressLine("Overall", item.overall)}${renderProgressLine("Roadmap", item.roadmapPercent)}${renderProgressLine("Quiz", item.quizPercent)}${renderProgressLine("Study Time", item.timePercent)}</div></div>`;
+        }).join("");
+      }
+
+      function renderProgressLine(label, value) {
+        return `<div class="mini-progress-row"><div class="item-topline"><span>${escapeHtml(label)}</span><strong>${value}%</strong></div><div class="progress-bar mini-progress"><span style="width:${Math.max(value, value ? 4 : 0)}%"></span></div></div>`;
+      }
+
+      function renderWeakTopics(weakTopics) {
+        if (!weakTopics.length) {
+          return renderInfoFallback("No weak topics saved", "Complete quizzes to identify exactly where you need another revision pass.");
+        }
+        return `<div class="weak-topics-list">${weakTopics.map(function (topic) { return `<div class="weak-topic-item"><div class="item-topline"><h3>${escapeHtml(typeof topic === "string" ? topic : topic.topic || topic.title || "Weak Topic")}</h3><span class="badge badge-warning">Needs work</span></div><p>Use a short revision block and a follow-up quiz to turn this weak area into a strong one.</p></div>`; }).join("")}</div>`;
+      }
+
+      function renderStrongTopics(strongTopics) {
+        if (!strongTopics.length) {
+          return renderInfoFallback("No strong topics yet", "As you complete roadmap topics and perform well in quizzes, your strengths will appear here.");
+        }
+        return `<div class="badge-list">${strongTopics.map(function (topic) { return `<div class="badge-item is-earned"><div class="item-topline"><h3>✅ ${escapeHtml(topic)}</h3><span class="badge badge-success">Strong</span></div><p>You have shown steady completion or strong quiz performance in this area.</p></div>`; }).join("")}</div>`;
+      }
+
+      function renderBadges(earnedBadges, definitions) {
+        if (!definitions.length) {
+          return renderInfoFallback("No badge definitions found", "Badge definitions will appear once the data layer is available.");
+        }
+        const earnedIds = new Set((earnedBadges || []).map(function (badge) { return badge.id; }));
+        return definitions.map(function (badge) {
+          const earned = earnedIds.has(badge.id);
+          return `<div class="badge-item ${earned ? "is-earned" : "is-locked"}"><div class="item-topline"><h3>${escapeHtml(badge.icon || "🏅")} ${escapeHtml(badge.title)}</h3><span class="badge ${earned ? "badge-success" : "badge-warning"}">${earned ? "Earned" : "Locked"}</span></div><p>${escapeHtml(badge.description || badge.condition || "Progress milestone")}</p></div>`;
+        }).join("");
+      }
+
+      function renderQuizHistoryRows(history) {
+        if (!history.length) {
+          return `<tr><td colspan="5">No quiz history yet. Complete a quiz to populate this table.</td></tr>`;
+        }
+        return history.slice(0, 12).map(function (item) {
+          const percent = item.percentage || Math.round(((item.score || 0) / Math.max(item.total || 1, 1)) * 100);
+          return `<tr><td>${escapeHtml(item.date || formatDate(item.createdAt))}</td><td>${escapeHtml(item.subject || "General")}</td><td>${escapeHtml(item.topic || "General")}</td><td>${escapeHtml(item.difficulty || "Medium")}</td><td>${escapeHtml(item.score + "/" + item.total + " (" + percent + "%)")}</td></tr>`;
+        }).join("");
+      }
+
+      function renderCharts(quizHistory, subjectStats) {
+        const hasChart = typeof window.Chart === "function";
+        if (!hasChart) {
+          elements.quizChartWrap.innerHTML = renderChartFallback("Chart.js could not load. Progress bars and tables remain fully available.");
+          elements.subjectChartWrap.innerHTML = renderChartFallback("Chart.js could not load. Subject breakdown still works through the visual progress list.");
+          return;
+        }
+
+        if (quizChartInstance) {
+          quizChartInstance.destroy();
+        }
+        if (subjectChartInstance) {
+          subjectChartInstance.destroy();
+        }
+
+        if (!quizHistory.length) {
+          elements.quizChartWrap.innerHTML = renderChartFallback("No quiz history yet. Complete a quiz to see your score trend.");
+        } else {
+          elements.quizChartWrap.innerHTML = '<canvas id="quizBarChart"></canvas>';
+          quizChartInstance = new window.Chart(document.getElementById("quizBarChart"), {
+            type: "bar",
+            data: {
+              labels: quizHistory.slice(0, 8).map(function (item, index) { return (item.subject || "Quiz") + " " + (index + 1); }).reverse(),
+              datasets: [{
+                label: "Quiz Score %",
+                data: quizHistory.slice(0, 8).map(function (item) { return item.percentage || Math.round(((item.score || 0) / Math.max(item.total || 1, 1)) * 100); }).reverse(),
+                backgroundColor: ["#2563eb", "#7c3aed", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444", "#2563eb", "#7c3aed"],
+                borderRadius: 12
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, max: 100 } }
+            }
+          });
+        }
+
+        if (!subjectStats.length) {
+          elements.subjectChartWrap.innerHTML = renderChartFallback("Subject-level effort data will appear once roadmap, quiz, or timetable activity exists.");
+        } else {
+          elements.subjectChartWrap.innerHTML = '<canvas id="subjectPieChart"></canvas>';
+          subjectChartInstance = new window.Chart(document.getElementById("subjectPieChart"), {
+            type: "pie",
+            data: {
+              labels: subjectStats.slice(0, 6).map(function (item) { return item.subject; }),
+              datasets: [{
+                data: subjectStats.slice(0, 6).map(function (item) { return Math.max(item.minutes, item.overall, 5); }),
+                backgroundColor: ["#2563eb", "#7c3aed", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444"]
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { position: "bottom" } }
+            }
+          });
+        }
+      }
+
+      function renderChartFallback(message) {
+        return `<div class="info-card chart-fallback"><h3>Chart unavailable</h3><p>${escapeHtml(message)}</p></div>`;
+      }
+
+      function renderInfoFallback(title, message) {
+        return `<div class="info-card"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(message)}</p></div>`;
+      }
+
+      function inferSubjectFromTopic(topic) {
+        const value = String(topic || "").toLowerCase();
+        if (value.includes("python")) return "Python";
+        if (value.includes("java")) return "Java";
+        if (value.includes("cloud")) return "Cloud Computing";
+        if (value.includes("security")) return "Cybersecurity";
+        if (value.includes("machine") || value.includes("ml")) return "Machine Learning";
+        if (value.includes("data")) return "Data Science";
+        if (value.includes("git")) return "Git";
+        if (value.includes("sql") || value.includes("database")) return "Database";
+        if (value.includes("android")) return "Android Development";
+        if (value.includes("design") || value.includes("ux")) return "UI/UX Design";
+        if (value.includes("algorithm") || value.includes("dsa")) return "DSA";
+        return "Web Development";
+      }
+
+      function parseDuration(duration) {
+        const match = String(duration || "").match(/(\d+)/);
+        return match ? Number(match[1]) : 0;
+      }
+
+      function formatDate(value) {
+        return value ? new Date(value).toLocaleDateString() : "N/A";
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      document.getElementById("progressRefreshButton").addEventListener("click", function () {
+        renderProgressPage();
+        if (app) {
+          app.showToast("Progress refreshed", "Your analytics and insights have been refreshed.", "success");
+        }
+      });
+
+      document.getElementById("progressInsightsButton").addEventListener("click", function () {
+        document.getElementById("subjectProgressList").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      renderProgressPage();
+    });
+  </script>
+</body>
+</html>
